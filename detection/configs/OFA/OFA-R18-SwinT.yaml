@@ -1,0 +1,53 @@
+_BASE_: "../Base-Distillation.yaml"
+OUTPUT_DIR: output/OFA-R18-SwinT
+INPUT:
+  FORMAT: "BGR"
+MODEL:
+  PIXEL_MEAN: [103.53, 116.28, 123.675]
+  PIXEL_STD: [1.0, 1.0, 1.0]
+  BACKBONE:
+    NAME: "build_resnet_fpn_backbone_kd"
+    FREEZE_AT: 0
+  WEIGHTS: "pretrained/r18-swint.pth"
+  RESNETS:
+    OUT_FEATURES: ["res2", "res3", "res4", "res5"]
+    DEPTH: 18
+    RES2_OUT_CHANNELS: 64
+  FPN:
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+  PROPOSAL_GENERATOR:
+    NAME: "RPN"
+  ROI_HEADS:
+    NAME: "StandardROIHeads"
+
+TEACHER:
+  MODEL:
+    WEIGHTS: "pretrained/faster_rcnn_swint_T.pth"
+    PIXEL_MEAN: [103.53, 116.28, 123.675]
+    PIXEL_STD: [1.0, 1.0, 1.0] # I use the dafault config PIXEL_MEAN, PIXEL_STD, INPUT.FORMAT , that is a mistake, but it affects performance negligently.
+    MASK_ON: False
+    RESNETS:
+      DEPTH: 50
+    BACKBONE:
+      NAME: "build_swint_fpn_backbone"
+    SWINT:
+      OUT_FEATURES: ["stage2", "stage3", "stage4", "stage5"]
+    FPN:
+      IN_FEATURES: ["stage2", "stage3", "stage4", "stage5"]
+
+KD:
+  TYPE: "OFA"
+  OFA:
+    OFA_LOSS_WEIGHT: 1.0
+    KD_LOSS_WEIGHT: 1.0
+    EPS: 1.50
+
+SOLVER:
+  AMP:
+    ENABLED: True
+  IMS_PER_BATCH: 8
+  BASE_LR: 0.001
+  MAX_ITER: 180000
+  STEPS:
+  - 120000
+  - 160000

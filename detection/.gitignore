@@ -1,0 +1,12 @@
+# detectron2
+detectron2
+
+# datasets
+datasets
+
+# pretrained teachers
+pretrained*
+
+# output
+output*
+run*
